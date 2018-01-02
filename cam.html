@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>face detect with camera</title>
+  <script src="js/tracking.js"></script>
+  <script src="js/face-min.js"></script>
+  <script src="js/Landmarks.js"></script>
+  <script src="js/Regressor.js"></script>
+  <style>
+  video, canvas {
+
+    position: absolute;
+  }
+#stats{
+  display: none;
+}
+  .demo-container{
+    background-color: #fff;
+  }
+  </style>
+</head>
+<body>
+
+    <div class="demo-container">
+      <video id="video" width="600" height="500" preload autoplay loop muted></video>
+      <canvas id="canvas" width="600" height="500"></canvas>
+    </div>
+  <script>
+    window.onload = function() {
+      var video = document.getElementById('video');
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+
+      var tracker = new tracking.LandmarksTracker();
+      tracker.setInitialScale(4);
+      tracker.setStepSize(2);
+      tracker.setEdgesDensity(0.1);
+
+      tracking.track('#video', tracker, { camera: true });
+
+      tracker.on('track', function(event) {
+
+        context.clearRect(0,0,canvas.width, canvas.height);
+
+        if(!event.data) return;
+
+          event.data.landmarks.forEach(function(landmarks) {
+            console.log(landmarks);
+            context.beginPath();
+                        context.moveTo(landmarks[0][0],landmarks[0][1]);
+                        context.lineTo(landmarks[8][0],landmarks[8][1]);
+                        context.strokeStyle = "#000";
+                        context.lineWidth = 40;
+                        context.stroke();
+          });
+
+      });
+
+    };
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Face Detect</title>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <div style="clear: both;">
+        <label for="url">Your Image URL:</label>
+        <input id="url" type="text" style="width:30%;">
+        <button id="newUrl">Submit</button>
+    </div>
+    <div>message: <span id="msg"></span></div>
+    <canvas id="viewport" width="1000" height="1000"></canvas>
+<!-- 
+    <video id="video" width="100%" mediaid="video_1" src="https://media.kairos.com/demo/emotion/videos/video_1.mp4" muted="" playsinline="" style="height: 247.5px;"></video>
+    <button id="playvid">play</button> -->
+    <!-- hosted libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.12/clipboard.min.js"></script>
+    <!-- import jQuery -->
+    <script>
+    var canvas = document.getElementById('viewport'),
+        context = canvas.getContext('2d');
+
+    $('#newUrl').on('click', function() {
+    	$('#msg').html('');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        console.log('QQ');
+        var urlImage = $('#url').val();
+        console.log(urlImage);
+
+        make_base();
+
+        function make_base() {
+            base_image = new Image();
+            base_image.src = urlImage;
+            // b
+            base_image.onload = function() {
+                context.drawImage(base_image, 0, 0);
+            }
+            var url = "http://api.kairos.com/detect";
+
+            // put your keys in the header
+            var headers = {
+                "app_id": "d7f1508b",
+                "app_key": "b0d889109a7bff1cd27e43a4fa52072f"
+            };
+            var payload = { "image": urlImage };
+            var url = "http://api.kairos.com/detect";
+
+            // make request 
+            $.ajax(url, {
+                headers: headers,
+                type: "POST",
+                data: JSON.stringify(payload),
+                dataType: "text"
+            }).done(function(response) {
+                response = JSON.parse(response);
+                console.log(response.Errors);
+                if (response.Errors === undefined) {
+                    var faces = response.images[0].faces;
+                    console.log(faces);
+                    var gender = {'male':0,'female':0};
+                    var race = {'asian':0,'hispanic':0,'black':0,'white':0};
+
+                    for (var i = 0; i < faces.length; i++) {
+                        console.log(i);
+                        var more = 0.5 * (faces[i].width + faces[i].eyeDistance) - faces[i].eyeDistance;
+                        var LX = faces[i].leftEyeCenterX + more,
+                            LY = faces[i].leftEyeCenterY,
+                            RX = faces[i].rightEyeCenterX - more,
+                            RY = faces[i].rightEyeCenterY;
+                        var linewidth = faces[i].height / 8;
+
+                        var ctx = canvas.getContext("2d");
+                        ctx.beginPath();
+                        ctx.moveTo(LX, LY);
+                        ctx.lineTo(RX, RY);
+                        ctx.strokeStyle = "#000";
+                        ctx.lineWidth = linewidth;
+                        ctx.stroke();
+
+                        if(faces[i].attributes.gender.femaleConfidence>0.5){
+                        	gender.female+=1;
+                        }else{
+                        	gender.male+=1;
+                        }
+                        // console.log(gender.male);
+                        $('#msg').html('There are '+gender.male+ ' man and '+gender.female+' woman here');
+                    }
+                }else{
+                	$('#msg').html('No face detected');
+                }
+
+            });
+        }
+    });
+
+    $('#playvid').on('click', function(){
+        $('#video').get(0).play();
+    })
+    </script>
+</body>
+
+</html>
